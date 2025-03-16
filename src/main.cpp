@@ -1,4 +1,57 @@
 #include <Arduino.h>
+#include "altimeter.h"
+
+// when it boots up, it will run the setup function at least once
+void setup() {
+    Serial.begin(115200); // Start serial communication for debugging
+    
+    // Initialize the altimeter
+    if (!setupAltimeter()) {
+        Serial.println("Altimeter initialization failed!");
+    } else {
+        Serial.println("Altimeter initialized successfully.");
+    }
+    
+    // Set ground level pressure for accurate altitude calculations
+    calibrateGroundLevelPressure();
+}
+
+void loop() {
+    // Read altitude from the altimeter
+    float last_altitude = readAltitude();
+    float altitude = readAltitude();
+    
+    Serial.print("Current Altitude: ");
+    Serial.println(altitude);
+
+    // Loop to detect apogee (highest point of flight)
+    while (altitude >= last_altitude - 1) {
+        last_altitude = altitude;
+        altitude = readAltitude();
+        Serial.print("Altitude: ");
+        Serial.println(altitude);
+    }
+
+    // Once apogee is reached, deploy the parachute
+    Serial.println("Apogee detected! Deploying parachute.");
+    deploy_parachute();
+    
+    // Delay before restarting the loop to avoid multiple deployments
+    delay(5000);
+}
+
+// Explanation:
+// - `setup()` initializes the altimeter and verifies connection.
+// - `calibrateGroundLevelPressure()` establishes a baseline pressure reading.
+// - `loop()` continuously reads altitude and determines when apogee occurs.
+// - Apogee is detected when altitude starts decreasing consistently.
+// - When apogee is reached, `deploy_parachute()` is called to trigger parachute deployment.
+// - Added `Serial.print` statements for debugging altitude readings.
+
+/*
+#include <Arduino.h> 
+#include "altimeter.h"
+
 
 // when it boots, up will run the setup function at least one
 void setup() {
@@ -59,3 +112,5 @@ void loop() {
 
 // each file should be designated to each indiviual task
 // should not be much branching 
+
+*/
