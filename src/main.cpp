@@ -1,44 +1,40 @@
-#include <Arduino.h>
-#include "altimeter.h"
+// The Boss's instructions for the whole flight
 
+#include <Arduino.h>   // Basic robot toolkit
+#include "altimeter.h" // Our special height instructions
+
+// SETUP (What to do when we turn on)
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(115200); // Start talking to computer
 
+    // Try waking up the height sensor
     if (!setupAltimeter()) {
-        Serial.println("Altimeter initialization failed!");
-        while (1); // Halt if failed
+        Serial.println("Altimeter initialization failed!"); // Uh oh!
+        while (1); // Freeze and do nothing (like panicking)
     }
 
-    Serial.println("Altimeter initialized successfully.");
-    calibrateGroundLevelPressure();
+    Serial.println("Altimeter initialized successfully."); // Yay!
+    calibrateGroundLevelPressure(); // Measure ground air pressure
 }
 
+// LOOP (What to do over and over during flight)
 void loop() {
-    float last_altitude = readAltitude();
-    float altitude = last_altitude;
+    static float last_altitude = readAltitude(); // Remember last height
+    float altitude = readAltitude();             // Measure new height
+    static int dropCount = 0;                   // Start "going down" counter at 0
 
-    int dropCount = 0;
-    const int requiredDrops = 3;
+    // Tell us the current height
+    Serial.print("Altitude: ");
+    Serial.println(altitude);
 
-    while (dropCount < requiredDrops) {
-        last_altitude = altitude;
-        altitude = readAltitude();
-
-        Serial.print("Altitude: ");
-        Serial.println(altitude);
-
-        if (altitude < last_altitude - 1) {
-            dropCount++;
-        } else {
-            dropCount = 0;
-        }
-
-        delay(100);
+    // Check if it's time to pop parachute
+    if (detect_apogee(altitude, last_altitude, &dropCount)) {
+        Serial.println("Apogee detected! Deploying parachute."); // DECISION TIME!
+        Serial.flush();  // Finish talking to computer
+        deploy_parachute(); // POP!
+        delay(5000);    // Wait 5 seconds so we don't pop twice
     }
 
-    Serial.println("Apogee detected! Deploying parachute.");
-    Serial.flush();
-    deploy_parachute();
-
-    delay(5000);  // Prevent re-deployment
+    last_altitude = altitude; // Remember this height for next time
+    delay(100); // Wait 1/10th second before checking again
 }

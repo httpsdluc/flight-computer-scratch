@@ -1,29 +1,26 @@
-#pragma once
+// This is like the cover of our instruction book
+#ifndef ALTIMETER_H  
+#define ALTIMETER_H
 
-#include <Arduino.h>
-#include <SPI.h>
+// Include the special height-measuring tool manual
 #include <Adafruit_BMP3XX.h>
 
-// SPI1 Pin Definitions (adjust if needed)
-#define BMP_CS     10  // Chip Select pin for BMP388
-#define SPI1_SCK   27  // SPI1 Clock
-#define SPI1_MISO  39  // SPI1 MISO
-#define SPI1_MOSI  28  // SPI1 MOSI
+// WIRING DIAGRAM (where to plug the wires)
+#define BMP_CS 10       // Plug the white wire into hole #10 (like a "talk button")
+#define SPI1_SCK 13     // Plug the yellow wire into hole #13 (clock signal)
+#define SPI1_MISO 12    // Plug the green wire into hole #12 (sensor talking to computer)
+#define SPI1_MOSI 11    // Plug the blue wire into hole #11 (computer talking to sensor)
 
-// Define the altimeter object
-extern Adafruit_BMP3XX altimeter;
+// Our two special tools we'll use everywhere:
+extern Adafruit_BMP3XX altimeter;          // The height-measuring robot
+extern double groundLevelPressure_hPa;     // Remembers air pressure at ground level
 
-// Ground-level pressure reference
-extern double groundLevelPressure_hPa;
+// LIST OF WHAT OUR ROBOT CAN DO:
+bool setupAltimeter();                     // Wake up the height sensor
+float readAltitude();                      // Ask "how high are we?"
+void calibrateGroundLevelPressure();       // Measure ground air pressure
+void deploy_parachute();                   // POP the parachute!
+bool detect_apogee(float current, float last, int* drops, int needed=3); // Is it time to pop?
 
-// Function to initialize the altimeter
-bool setupAltimeter();
-
-// Function to read altitude
-float readAltitude();
-
-// Function to set ground-level pressure before launch
-void calibrateGroundLevelPressure();
-
-// Function to deploy the parachute
-void deploy_parachute();
+// End of the instruction book
+#endif
